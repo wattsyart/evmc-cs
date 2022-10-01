@@ -1,18 +1,34 @@
-﻿using System.Runtime.InteropServices;
-using evmc;
+﻿using evmc;
+using System.Runtime.InteropServices;
 
 namespace example
 {
     public static class Example
     {
-        // [DllExport(CallingConvention.Cdecl)]
-        public static evmc_vm evmc_create_example_vm()
+        // [MarshalAs(UnmanagedType.Struct)]
+        // extern "C" evmc_vm* evmc_create_example_vm()
+
+        [DllExport("evmc_create_example_vm", CallingConvention.Cdecl)]
+        public static IntPtr evmc_create_example_vm()
         {
-            var evm = new evmc_vm();
-            evm.abi_version = 10;
-            evm.name = "example";
-            evm.version = "0.0.1";
-            return evm;
+            evmc_vm instance = new evmc_vm
+            {
+                abi_version = 10,
+                name = "example",
+                version = "0.0.1"
+            };
+
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(instance));
+
+            try
+            {
+                Marshal.StructureToPtr(instance, ptr, false);
+                return ptr;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
         }
     }
 }
